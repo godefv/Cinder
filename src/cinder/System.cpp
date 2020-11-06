@@ -64,7 +64,7 @@
 	#include <netdb.h>
 #endif
 
-#if defined( __clang__ ) || defined( __GNUC__ )
+#if defined( __GNUC__ )
 	#include <cxxabi.h>
 #endif
 
