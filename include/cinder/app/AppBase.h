@@ -41,6 +41,7 @@
 
 #include <vector>
 #include <algorithm>
+#include <type_traits>
 
 namespace cinder {
 class Timeline;
@@ -408,7 +409,7 @@ class CI_API AppBase {
 	void	dispatchAsync( const std::function<void()> &fn );
 	
 	template<typename T>
-	typename std::result_of<T()>::type dispatchSync( T fn );
+	typename std::invoke_result<T>::type dispatchSync( T fn );
 
 	//! Returns the default Renderer which will be used when creating a new Window. Set by the app instantiation macro automatically.
 	RendererRef	getDefaultRenderer() const { return mDefaultRenderer; }
@@ -613,12 +614,12 @@ inline ::CGContextRef	createWindowCgContext() { return (std::dynamic_pointer_cas
 //@}
 
 template<typename T>
-typename std::result_of<T()>::type AppBase::dispatchSync( T fn )
+typename std::invoke_result<T>::type AppBase::dispatchSync( T fn )
 {
 	if( isMainThread() )
 		return fn();
 	else {
-		typedef typename std::result_of<T()>::type result_type;
+		typedef typename std::invoke_result<T>::type result_type;
 		std::packaged_task<result_type()> task( std::move( fn ) );
 
 		auto fute = task.get_future();

@@ -33,7 +33,7 @@ if( CINDER_MSW )
     if( HAS_TOOLSET_SPECIFIED )
         set( PLATFORM_TOOLSET "${CMAKE_VS_PLATFORM_TOOLSET}" )
     else()
-        set( PLATFORM_TOOLSET "v142" ) # Visual Studio 2019
+        set( PLATFORM_TOOLSET "v160" ) # Visual Studio 2019
     endif()
 	# if( NOT ( "${CMAKE_GENERATOR}" MATCHES "Visual Studio.+" ) )
 		if( MSVC_VERSION LESS 1920 )
@@ -85,7 +85,7 @@ set_target_properties( cinder PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY_RELWITHDEBINFO "${OUTPUT_DIRECTORY_BASE}/RelWithDebInfo/${PLATFORM_TOOLSET}"
 )
 
-# Check compiler support for enabling c++11, c++14 or c++17.
+# Check compiler support for enabling c++11, c++14, c++17 or c++20.
 if( CINDER_MSW AND MSVC )
     if( MSVC_VERSION LESS 1800 ) # Older version of Visual Studio
         message( FATAL_ERROR "Unsupported MSVC version: ${MSVC_VERSION}" )
@@ -96,6 +96,7 @@ if( CINDER_MSW AND MSVC )
         set( COMPILER_SUPPORTS_CXX11 true )
     else()
         include( CheckCXXCompilerFlag )
+        CHECK_CXX_COMPILER_FLAG("/std:c++20" COMPILER_SUPPORTS_CXX20 )
         CHECK_CXX_COMPILER_FLAG("/std:c++17" COMPILER_SUPPORTS_CXX17 )
         CHECK_CXX_COMPILER_FLAG("/std:c++14" COMPILER_SUPPORTS_CXX14 )
         CHECK_CXX_COMPILER_FLAG("/std:c++11" COMPILER_SUPPORTS_CXX11 )
@@ -106,12 +107,19 @@ elseif( CINDER_ANDROID )
     set( COMPILER_SUPPORTS_CXX11 true )
 else()
     include( CheckCXXCompilerFlag )
+    CHECK_CXX_COMPILER_FLAG( "-std=c++20" COMPILER_SUPPORTS_CXX20 )
     CHECK_CXX_COMPILER_FLAG( "-std=c++17" COMPILER_SUPPORTS_CXX17 )
     CHECK_CXX_COMPILER_FLAG( "-std=c++14" COMPILER_SUPPORTS_CXX14 )
     CHECK_CXX_COMPILER_FLAG( "-std=c++11" COMPILER_SUPPORTS_CXX11 )
 endif()
 
-if( CINDER_ENABLE_CXX17 AND COMPILER_SUPPORTS_CXX17 )
+if( COMPILER_SUPPORTS_CXX20 )
+    if( MSVC )
+    	set( CINDER_CXX_FLAGS "/std:c++20" )
+    else()
+    	set( CINDER_CXX_FLAGS "-std=c++20" )
+    endif()
+elseif( COMPILER_SUPPORTS_CXX17 )
     if( MSVC )
     	set( CINDER_CXX_FLAGS "/std:c++17" )
     else()
@@ -130,7 +138,7 @@ elseif( COMPILER_SUPPORTS_CXX11 )
         set( CINDER_CXX_FLAGS "-std=c++11" )
     endif()
 else()
-	message( FATAL_ERROR "The compiler ${CMAKE_CXX_COMPILER} has neither C++11, C++14 nor C++17 support. Please use a different C++ compiler." )
+	message( FATAL_ERROR "The compiler ${CMAKE_CXX_COMPILER} has neither C++11, C++14, C++17 nor c++20 support. Please use a different C++ compiler." )
 endif()
 
 # TODO: it would be nice to the following, but we can't until min required cmake is 3.3
